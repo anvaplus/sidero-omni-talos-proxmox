@@ -1,0 +1,24 @@
+# ======================================================================
+# Proxmox Infrastructure Provider — Example Configuration
+# ======================================================================
+# Copy this file to `config.yaml` and replace placeholders with your values.
+# IMPORTANT: `config.yaml` stores credentials. Do NOT commit it to version control.
+
+proxmox:
+  # Proxmox API base endpoint.
+  # Example format: https://proxmox-host:8006/api2/json
+  # Default Proxmox API port is 8006.
+  url: "https://192.168.1.100:8006/api2/json"
+
+  # SSL verification behavior for HTTPS connections to Proxmox.
+  # - true  => Do NOT verify server TLS certificates (useful for self-signed certs).
+  # - false => Verify certificates (recommended for production environments).
+  insecureSkipVerify: true
+
+  # Authentication using a Proxmox API token.
+  # Create a token in the Proxmox UI at: Datacenter → Permissions → API Tokens
+  # Token format for `tokenID` is: user@realm!tokenid
+  # Provide the token secret in `tokenSecret` (the token's secret value).
+  # The provider expects separate `tokenID` and `tokenSecret` fields.
+  tokenID: "user@realm!tokenid"
+  tokenSecret: "your-token-secret-here"
