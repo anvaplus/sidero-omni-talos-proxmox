@@ -1,0 +1,138 @@
+# omnictl cluster template sync -v -f k8s-prod.yaml
+# Production HA cluster: 3 control planes + 3 workers
+# Note: Control planes use DHCP. For static IPs, configure DHCP reservations.
+---
+kind: Cluster
+name: k8s-prod
+labels:
+  cluster-id: "k8s-prod"
+kubernetes:
+  version: v1.34.2
+talos:
+  version: v1.11.5
+
+---
+kind: ControlPlane
+machineClass:
+  name: proxmox-control-plane
+  size: 3
+systemExtensions:
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent
+  - siderolabs/util-linux-tools
+patches:
+  - name: network-config
+    inline:
+      machine:
+        network:
+          nameservers:
+            - 10.20.0.2
+        time:
+          servers:
+            - pool.ntp.org
+
+---
+kind: Workers
+name: worker-1
+machineClass:
+  name: proxmox-worker
+  size: 1
+systemExtensions:
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent 
+  - siderolabs/util-linux-tools
+patches:
+  - name: worker-labels
+    inline:
+      machine:
+        nodeLabels:
+          node-role.kubernetes.io/worker: ""
+  - name: static-ip-worker-1
+    inline:
+      machine:
+        network:
+          hostname: k8s-worker-1
+          interfaces:
+            - interface: ens18
+              addresses:
+                - 10.20.20.15/16
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 10.20.0.1
+          nameservers:
+            - 10.20.0.2
+        time:
+          servers:
+            - pool.ntp.org
+
+---
+kind: Workers
+name: worker-2
+machineClass:
+  name: proxmox-worker
+  size: 1
+systemExtensions:
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent 
+  - siderolabs/util-linux-tools
+patches:
+  - name: worker-labels
+    inline:
+      machine:
+        nodeLabels:
+          node-role.kubernetes.io/worker: ""
+  - name: static-ip-worker-2
+    inline:
+      machine:
+        network:
+          hostname: k8s-worker-2
+          interfaces:
+            - interface: ens18
+              addresses:
+                - 10.20.20.16/16
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 10.20.0.1
+          nameservers:
+            - 10.20.0.2
+        time:
+          servers:
+            - pool.ntp.org
+
+---
+kind: Workers
+name: worker-3
+machineClass:
+  name: proxmox-worker
+  size: 1
+systemExtensions:
+  - siderolabs/iscsi-tools
+  - siderolabs/nfsd
+  - siderolabs/qemu-guest-agent 
+  - siderolabs/util-linux-tools
+patches:
+  - name: worker-labels
+    inline:
+      machine:
+        nodeLabels:
+          node-role.kubernetes.io/worker: ""
+  - name: static-ip-worker-3
+    inline:
+      machine:
+        network:
+          hostname: k8s-worker-3
+          interfaces:
+            - interface: ens18
+              addresses:
+                - 10.20.20.17/16
+              routes:
+                - network: 0.0.0.0/0
+                  gateway: 10.20.0.1
+          nameservers:
+            - 10.20.0.2
+        time:
+          servers:
+            - pool.ntp.org
