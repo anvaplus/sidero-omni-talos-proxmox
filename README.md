@@ -31,6 +31,10 @@ The integration enables automated provisioning of Kubernetes clusters with:
 │   ├── worker.yaml         # Worker node specs (4 CPU, 8GB RAM)
 │   └── README.md           # Machine class documentation
 │
+├── patches/                # Patches for Talos machine configuration
+│   ├── cni.yaml            # Disables the default CNI installation
+│   └── disable-kube-proxy.yaml # Disables kube-proxy
+│
 └── cluster-template/       # Kubernetes cluster definitions
     ├── k8s-dev-static-ip.yaml   # Dev cluster with static IPs
     ├── k8s-dev-dhcp.yaml        # Dev cluster with DHCP
@@ -57,6 +61,10 @@ The integration enables automated provisioning of Kubernetes clusters with:
 - **Automated provisioning**: VMs created automatically on Proxmox
 - **System extensions**: iSCSI, NFS, QEMU guest agent support
 
+### Patches
+- **`cni.yaml`**: Disables the default CNI installation in Talos, allowing a different CNI (like Cilium) to be installed separately.
+- **`disable-kube-proxy.yaml`**: Disables `kube-proxy` on all nodes, which is a prerequisite for running Cilium in eBPF mode.
+
 ## Quick Start
 
 ### Prerequisites
@@ -68,25 +76,25 @@ The integration enables automated provisioning of Kubernetes clusters with:
 
 ### 1. Set Up the Proxmox Provider
 
+All commands should be run from the root of the repository.
+
 ```bash
-cd proxmox-provider
-
 # Copy configuration examples
-cp .env.example .env
-cp config.yaml.example config.yaml
+cp proxmox-provider/.env.example proxmox-provider/.env
+cp proxmox-provider/config.yaml.example proxmox-provider/config.yaml
 
-# Edit configuration files
+# Edit configuration files inside the proxmox-provider/ directory:
 # - Set OMNI_API_ENDPOINT and OMNI_INFRA_PROVIDER_KEY in .env
 # - Set Proxmox URL, tokenID, and tokenSecret in config.yaml
 
 # Secure files
-chmod 600 .env config.yaml
+chmod 600 proxmox-provider/.env proxmox-provider/config.yaml
 
 # Start the provider
-docker compose up -d
+docker compose -f proxmox-provider/docker-compose.yaml up -d
 
 # Verify it's running
-docker compose logs -f
+docker compose -f proxmox-provider/docker-compose.yaml logs -f
 ```
 
 See [proxmox-provider/README.md](proxmox-provider/README.md) for detailed setup instructions.
@@ -94,11 +102,9 @@ See [proxmox-provider/README.md](proxmox-provider/README.md) for detailed setup 
 ### 2. Register Machine Classes
 
 ```bash
-cd machine-classes
-
-# Apply control plane and worker machine classes
-omnictl apply -f control-plane.yaml
-omnictl apply -f worker.yaml
+# Apply control plane and worker machine classes from the repository root
+omnictl apply -f machine-classes/control-plane.yaml
+omnictl apply -f machine-classes/worker.yaml
 
 # Verify registration
 omnictl get machineclasses
@@ -109,13 +115,11 @@ See [machine-classes/README.md](machine-classes/README.md) for customization opt
 ### 3. Deploy a Cluster
 
 ```bash
-cd cluster-template
-
 # For development (1 control plane + 3 workers, static IPs)
-omnictl cluster template sync -v -f k8s-dev-static-ip.yaml
+omnictl cluster template sync -v -f cluster-template/k8s-dev-static-ip.yaml
 
 # For production (3 control planes + 3 workers, HA setup)
-omnictl cluster template sync -v -f k8s-prod.yaml
+omnictl cluster template sync -v -f cluster-template/k8s-prod.yaml
 
 # Monitor cluster creation
 omnictl get clusters
@@ -123,6 +127,44 @@ omnictl get machines
 ```
 
 See [cluster-template/README.md](cluster-template/README.md) for all available templates.
+
+### 4. Install Cilium CNI
+
+The cluster templates use patches to disable the default CNI and `kube-proxy`. This means you must install a CNI to get a fully functional cluster. In this case, we'll install Cilium.
+
+After applying the cluster template, your nodes will appear as "Not Ready." This is expected behavior because Kubernetes nodes are only marked as `Ready` once a CNI is running and managing pod networking.
+
+Follow these steps to install Cilium.
+
+**1. Get Kubeconfig**
+
+```bash
+# Get the kubeconfig for your new cluster (e.g., k8s-dev)
+omnictl get kubeconfig k8s-dev > k8s-dev.yaml
+export KUBECONFIG=$(pwd)/k8s-dev.yaml
+```
+
+**2. Install Cilium using Helm**
+
+```bash
+helm repo add cilium https://helm.cilium.io/
+helm repo update
+helm install \
+    cilium \
+    cilium/cilium \
+    --version 1.18.0 \
+    --namespace kube-system \
+    --set ipam.mode=kubernetes \
+    --set kubeProxyReplacement=true \
+    --set securityContext.capabilities.ciliumAgent="{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}" \
+    --set securityContext.capabilities.cleanCiliumState="{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}" \
+    --set cgroup.autoMount.enabled=false \
+    --set cgroup.hostRoot=/sys/fs/cgroup \
+    --set k8sServiceHost=localhost \
+    --set k8sServicePort=7445
+```
+After running the Helm command, it will take a few minutes for the Cilium pods to be deployed and become operational. Once they are running, your Kubernetes nodes will transition to a "Ready" state, and your cluster will be fully networked with Cilium.
+
 
 ## Configuration Details
 

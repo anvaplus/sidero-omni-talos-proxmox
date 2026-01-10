@@ -10,6 +10,11 @@ kubernetes:
   version: v1.34.2
 talos:
   version: v1.11.5
+patches:
+  - name: no-cni
+    file: patches/cni.yaml
+  - name: disable-kube-proxy
+    file: patches/disable-kube-proxy.yaml
 
 ---
 kind: ControlPlane

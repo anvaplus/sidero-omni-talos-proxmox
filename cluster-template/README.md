@@ -59,25 +59,26 @@ The static IP template assigns individual IPs by creating separate Workers defin
 
 ### Deploy a Cluster
 
-```bash
-# Navigate to cluster-template directory
-cd <local_path>/sidero-omni-talos-proxmox/cluster-template
+From the root of the `sidero-omni-talos-proxmox` repository:
 
+```bash
 # Sync template to Omni (creates/updates cluster definition)
-omnictl cluster template sync -v -f k8s-dev-static-ip.yaml
+omnictl cluster template sync -v -f cluster-template/k8s-dev-static-ip.yaml
 
 # Or for DHCP version
-omnictl cluster template sync -v -f k8s-dev-dhcp.yaml
+omnictl cluster template sync -v -f cluster-template/k8s-dev-dhcp.yaml
 
 # Production cluster
-omnictl cluster template sync -v -f k8s-prod.yaml
+omnictl cluster template sync -v -f cluster-template/k8s-prod.yaml
 ```
 
 ### Delete a Cluster
 
+From the root of the `sidero-omni-talos-proxmox` repository:
+
 ```bash
-# Delete cluster and all resources
-omnictl cluster delete -v -f k8s-dev-static-ip.yaml
+# Delete cluster and all resources using the template file
+omnictl cluster delete -v -f cluster-template/k8s-dev-static-ip.yaml
 
 # Or delete by name
 omnictl cluster delete k8s-dev
@@ -99,19 +100,17 @@ omnictl get cluster k8s-dev -o yaml
 
 ## Prerequisites
 
-Before deploying clusters, ensure:
+Before deploying clusters, ensure the following commands are run from the root of the `sidero-omni-talos-proxmox` repository:
 
 1. **Machine classes are created**:
    ```bash
-   cd ../machine-classes
-   omnictl apply -f control-plane.yaml
-   omnictl apply -f worker.yaml
+   omnictl apply -f machine-classes/control-plane.yaml
+   omnictl apply -f machine-classes/worker.yaml
    ```
 
 2. **Proxmox provider is running**:
    ```bash
-   cd ../proxmox-provider
-   docker compose ps
+   docker compose -f proxmox-provider/docker-compose.yaml ps
    ```
 
 3. **Network configuration matches your environment**:
