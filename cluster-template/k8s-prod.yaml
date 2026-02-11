@@ -71,6 +71,9 @@ patches:
         time:
           servers:
             - pool.ntp.org
+  - name: longhorn
+    file: patches/longhorn.yaml
+
 
 ---
 kind: Workers
@@ -106,6 +109,8 @@ patches:
         time:
           servers:
             - pool.ntp.org
+  - name: longhorn
+    file: patches/longhorn.yaml
 
 ---
 kind: Workers
@@ -141,3 +146,5 @@ patches:
         time:
           servers:
             - pool.ntp.org
+  - name: longhorn
+    file: patches/longhorn.yaml
