@@ -32,12 +32,13 @@ The integration enables automated provisioning of Kubernetes clusters with:
 │   └── README.md           # Machine class documentation
 │
 ├── patches/                # Patches for Talos machine configuration
-│   ├── cni.yaml            # Disables the default CNI installation
-│   └── disable-kube-proxy.yaml # Disables kube-proxy
+│   ├── cni.yaml            # Disables default CNI (enables Cilium installation)
+│   ├── disable-kube-proxy.yaml # Disables kube-proxy for Cilium eBPF mode
+│   └── longhorn.yaml       # Configures Longhorn distributed storage support
 │
 └── cluster-template/       # Kubernetes cluster definitions
-    ├── k8s-dev-static-ip.yaml   # Dev cluster with static IPs
-    ├── k8s-dev-dhcp.yaml        # Dev cluster with DHCP
+    ├── k8s-dev-static-ip.yaml   # Dev cluster with static IPs (1 CP + 3 workers)
+    ├── k8s-dev-dhcp.yaml        # Dev cluster with DHCP (1 CP + 3 workers)
     ├── k8s-prod.yaml            # Production HA cluster (3 CP + 3 workers)
     └── README.md                # Cluster deployment guide
 ```
@@ -62,8 +63,9 @@ The integration enables automated provisioning of Kubernetes clusters with:
 - **System extensions**: iSCSI, NFS, QEMU guest agent support
 
 ### Patches
-- **`cni.yaml`**: Disables the default CNI installation in Talos, allowing a different CNI (like Cilium) to be installed separately.
-- **`disable-kube-proxy.yaml`**: Disables `kube-proxy` on all nodes, which is a prerequisite for running Cilium in eBPF mode.
+- **`cni.yaml`**: Disables the default Flannel CNI installation in Talos, allowing alternative CNI providers (like Cilium) to be installed separately after cluster creation. This is required when using CNI solutions that provide their own networking implementation.
+- **`disable-kube-proxy.yaml`**: Disables `kube-proxy` on all cluster nodes. This is essential when running Cilium in eBPF mode, as Cilium replaces kube-proxy functionality with its own eBPF-based implementation for superior performance and security.
+- **`longhorn.yaml`**: Configures Longhorn distributed storage support by mounting and binding `/var/mnt/longhorn` with proper kubelet extra mounts. This enables nodes to support Longhorn as a persistent storage backend for applications requiring block storage.
 
 ## Quick Start
 
