@@ -67,6 +67,7 @@ The integration enables automated provisioning of Kubernetes clusters with:
 ### Patches
 - **`cni.yaml`**: Disables the default Flannel CNI installation in Talos, allowing alternative CNI providers (like Cilium) to be installed separately after cluster creation. This is required when using CNI solutions that provide their own networking implementation.
 - **`disable-kube-proxy.yaml`**: Disables `kube-proxy` on all cluster nodes. This is essential when running Cilium in eBPF mode, as Cilium replaces kube-proxy functionality with its own eBPF-based implementation for superior performance and security.
+- **`delete-HostnameConfig.yaml`**: Removes the default `HostnameConfig` resource (which defaults to `auto: stable`) to allow static hostnames to be set without conflict in Talos 1.12+. This addresses a known issue where applying a static hostname patch fails if the stable hostname feature is already active.
 - **`longhorn.yaml`**: Configures Longhorn distributed storage support by mounting and binding `/var/mnt/longhorn` with proper kubelet extra mounts. This enables nodes to support Longhorn as a persistent storage backend for applications requiring block storage.
 
 ## Quick Start
