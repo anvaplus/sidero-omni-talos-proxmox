@@ -19,8 +19,8 @@ This directory contains Omni cluster template definitions for deploying Talos Ku
 - 1 control plane node
 - 3 worker nodes
 - Uses DHCP for IP assignment (gateway provided by DHCP)
-- Configured DNS (10.20.0.2) and NTP (pool.ntp.org)
-- Custom hostnames: `k8s-dev-cp-1`, `k8s-dev-worker` (base name)
+- Configured NTP (pool.ntp.org)
+- Hostnames: DHCP/Default (static hostnames removed for Talos 1.12+ compatibility)
 - Simpler configuration, good for testing
 
 ### Production Clusters

@@ -34,7 +34,8 @@ The integration enables automated provisioning of Kubernetes clusters with:
 ├── patches/                # Patches for Talos machine configuration
 │   ├── cni.yaml            # Disables default CNI (enables Cilium installation)
 │   ├── disable-kube-proxy.yaml # Disables kube-proxy for Cilium eBPF mode
-│   └── longhorn.yaml       # Configures Longhorn distributed storage support
+│   ├── longhorn.yaml       # Configures Longhorn distributed storage support
+│   └── delete-HostnameConfig.yaml # Removes conflicting HostnameConfig for Talos 1.12+
 │
 └── cluster-template/       # Kubernetes cluster definitions
     ├── k8s-dev-static-ip.yaml   # Dev cluster with static IPs (1 CP + 3 workers)
@@ -48,6 +49,7 @@ The integration enables automated provisioning of Kubernetes clusters with:
 ### Network Configuration
 - **Static IP support**: Pre-configured IPs for all nodes with custom hostnames
 - **DHCP support**: Dynamic IP assignment for simpler setups
+- **Talos 1.12+ Compatibility**: Includes patches to handle `HostnameConfig` resource changes (see `patches/delete-HostnameConfig.yaml`) to avoid conflicts with stable hostnames.
 - **Custom DNS and NTP**: Configurable nameservers and time servers
 - **Gateway configuration**: Full network routing control
 

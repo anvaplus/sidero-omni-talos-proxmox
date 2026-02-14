@@ -5,9 +5,9 @@ name: k8s-dev-dhcp
 labels:
   cluster-id: "k8s-dev-dhcp"
 kubernetes:
-  version: v1.34.2
+  version: v1.35.1
 talos:
-  version: v1.11.5
+  version: v1.12.4
 patches:
   - name: no-cni
     file: patches/cni.yaml
@@ -25,14 +25,14 @@ systemExtensions:
   - siderolabs/qemu-guest-agent
   - siderolabs/util-linux-tools
 patches:
-  - name: hostname-cp
+  - name: time
     inline:
       machine:
-        network:
-          hostname: k8s-dev-cp
         time:
           servers:
             - pool.ntp.org
+  - name: hostname
+    file: patches/delete-HostnameConfig.yaml
 
 ---
 kind: Workers
@@ -51,13 +51,13 @@ patches:
       machine:
         nodeLabels:
           node-role.kubernetes.io/worker: ""
-  - name: hostname-prefix
+  - name: time
     inline:
       machine:
-        network:
-          hostname: k8s-dev-worker
         time:
           servers:
             - pool.ntp.org
   - name: longhorn
     file: patches/longhorn.yaml
+  - name: hostname
+    file: patches/delete-HostnameConfig.yaml
